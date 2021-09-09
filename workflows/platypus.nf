@@ -11,7 +11,12 @@ WorkflowPlatypus.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
+def checkPathParamList = [
+    params.input,
+    params.multiqc_config,
+    params.fasta,
+    params.fasta_fai
+    ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
@@ -43,7 +48,7 @@ include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK } from '../subworkflows/local/input_check' addParams( options: [:] )
+// include { INPUT_CHECK } from '../subworkflows/local/input_check' addParams( options: [:] )
 
 /*
 ========================================================================================
@@ -57,9 +62,62 @@ multiqc_options.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { FASTQC  } from '../modules/nf-core/modules/fastqc/main'  addParams( options: modules['fastqc'] )
 include { MULTIQC } from '../modules/nf-core/modules/multiqc/main' addParams( options: multiqc_options   )
 
+
+//
+// input channel
+//
+
+def extract_csv(csv_file) {
+    Channel.from(csv_file).splitCsv(header: true)
+        //Retrieves number of lanes by grouping together by patient and sample and counting how many entries there are for this combination
+        .map{ row ->
+            if (!(row.patient && row.sample)) log.warn "Missing or unknown field in csv file header"
+            [[row.patient.toString(), row.sample.toString()], row]
+        }.groupTuple()
+        .map{ meta, rows ->
+            size = rows.size()
+            [rows, size]
+        }.transpose()
+        .map{ row, numLanes -> //from here do the usual thing for csv parsing
+        def meta = [:]
+
+        //TODO since it is mandatory: error/warning if not present?
+        // Meta data to identify samplesheet
+        // Both patient and sample are mandatory
+        // Several sample can belong to the same patient
+        // Sample should be unique for the patient
+        if (row.patient) meta.patient = row.patient.toString()
+        if (row.sample)  meta.sample  = row.sample.toString()
+
+        // If no gender specified, gender is not considered
+        // gender is only mandatory for somatic CNV
+        if (row.gender) meta.gender = row.gender.toString()
+        else meta.gender = "NA"
+
+        // If no status specified, sample is assumed normal
+        if (row.status) meta.status = row.status.toInteger()
+        else meta.status = 0
+
+        // mapping with platypus
+        if (row.vcf && row.bam_t) {
+            meta.id         = row.sample
+            def vcf         = file(row.vcf, checkIfExists: true)
+            def bam_t       = file(row.bam_t, checkIfExists: true)
+            def bam_c       = file(row.bam_c, checkIfExists: true)
+            return [meta, [vcf, bam_t, bam_c]]
+        // recalibration
+        }
+    }
+}
+
+def extract_chromosomes(fai) {
+    return Channel.from(fai).splitCsv(header: false)
+           .splitCsv(sep: "\t")
+           .map{ chr -> chr[0] }
+           .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
+}
 /*
 ========================================================================================
     RUN MAIN WORKFLOW
@@ -73,20 +131,11 @@ workflow PLATYPUS {
 
     ch_software_versions = Channel.empty()
 
-    //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
-    INPUT_CHECK (
-        ch_input
-    )
+    // input
 
-    //
-    // MODULE: Run FastQC
-    //
-    FASTQC (
-        INPUT_CHECK.out.reads
-    )
-    ch_software_versions = ch_software_versions.mix(FASTQC.out.version.first().ifEmpty(null))
+    input_samples = extract_csv(params.input)
+    fasta         = params.fasta
+    fasta_fai     = extract_chromosomes(params.fasta_fai)
 
     //
     // MODULE: Pipeline reporting
@@ -114,7 +163,6 @@ workflow PLATYPUS {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(GET_SOFTWARE_VERSIONS.out.yaml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
         ch_multiqc_files.collect()
