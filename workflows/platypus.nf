@@ -19,9 +19,6 @@ def checkPathParamList = [
     ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
-// Check mandatory parameters
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
-
 /*
 ========================================================================================
     CONFIG FILES
@@ -45,10 +42,6 @@ def modules = params.modules.clone()
 //
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' addParams( options: [publish_files : ['tsv':'']] )
 
-//
-// SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
-//
-// include { INPUT_CHECK } from '../subworkflows/local/input_check' addParams( options: [:] )
 
 /*
 ========================================================================================
@@ -62,11 +55,46 @@ multiqc_options.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { MULTIQC } from '../modules/nf-core/modules/multiqc/main' addParams( options: multiqc_options   )
-
+include { MULTIQC } from '../modules/nf-core/modules/multiqc/main' addParams( options: multiqc_options )
 
 //
-// input channel
+// MODULE: platypus module
+//
+def platypusvariant_options   = modules['platypusvariant']
+include { PLATYPUSVARIANT } from '../modules/local/platypusvariant' addParams( options: platypusvariant_options )
+
+//
+// MODULE: bcftools module
+//
+
+def bcftools_options          =modules['bcftools']
+include { BCFTOOLS_CONCAT } from '../modules/nf-core/modules/bcftools/concat/main' addParams( options: bcftools_options)
+
+//
+// MODULE: bcftools module
+//
+
+def filter_platypus_options          =modules['filter_platypus']
+include { FILTER_PLATYPUS } from '../modules/local/filter_platypus' addParams( options: filter_platypus_options)
+
+// Initialize file channels based on params, defined in the params.genomes[params.genome] scope
+
+fasta             = params.fasta             ? Channel.fromPath(params.fasta).collect()             : ch_dummy_file
+fasta_fai         = params.fasta_fai         ? Channel.fromPath(params.fasta_fai)                   : ch_dummy_file
+
+// Initialise input sample
+csv_file = file(params.input)
+input_samples  = extract_csv(csv_file)
+ch_fasta_fai = fasta_fai
+                .splitCsv(sep: "\t")
+                .map{ chr -> chr[0] }
+                .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
+platypus_input = make_platypus_input(input_samples)
+platypus_input.view()
+platypus_input = platypus_input.combine(ch_fasta_fai)
+
+//
+// input channel functions
 //
 
 def extract_csv(csv_file) {
@@ -100,9 +128,14 @@ def extract_csv(csv_file) {
         if (row.status) meta.status = row.status.toInteger()
         else meta.status = 0
 
+        // create control id necessary for filter platypus
+        if (row.bam_c) {
+            meta.control = file(row.bam_c).getName()
+            meta.control = meta.control.toString().minus('.recal.bam')
+        }
+
         // mapping with platypus
         if (row.vcf && row.bam_t) {
-            meta.id         = row.sample
             def vcf         = file(row.vcf, checkIfExists: true)
             def bam_t       = file(row.bam_t, checkIfExists: true)
             def bam_c       = file(row.bam_c, checkIfExists: true)
@@ -112,12 +145,14 @@ def extract_csv(csv_file) {
     }
 }
 
-def extract_chromosomes(fai) {
-    return Channel.from(fai).splitCsv(header: false)
-           .splitCsv(sep: "\t")
-           .map{ chr -> chr[0] }
-           .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
+def make_platypus_input(input) {
+    return input
+        .map { meta, files -> [ meta.patient, meta.control, files[0],[files[1],files[2]]]}
+        .groupTuple()
+        .map { patient, control, vcfs, bams  -> [ patient,control,vcfs,bams.flatten()] }
+        .map { patient, control, vcfs, bams  -> [ patient,control.unique().join(""),vcfs,bams.unique()] }
 }
+
 /*
 ========================================================================================
     RUN MAIN WORKFLOW
@@ -131,11 +166,16 @@ workflow PLATYPUS {
 
     ch_software_versions = Channel.empty()
 
-    // input
+    //
+    // MODULE: Run platypus
+    //
+    PLATYPUSVARIANT(platypus_input, fasta)
+    BCFTOOLS_CONCAT(PLATYPUSVARIANT.out.platypus_vcf.groupTuple())
+    filter_vcf_in = BCFTOOLS_CONCAT.out.vcf
+    filter_vcf_in = filter_vcf_in
+                        .map{patient, control, vcf -> [patient,control.unique().join(""),vcf]}
+    FILTER_PLATYPUS(filter_vcf_in)
 
-    input_samples = extract_csv(params.input)
-    fasta         = params.fasta
-    fasta_fai     = extract_chromosomes(params.fasta_fai)
 
     //
     // MODULE: Pipeline reporting

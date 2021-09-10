@@ -3,6 +3,9 @@
     "homePage": "https://github.com/nf-core/platypus",
     "repos": {
         "nf-core/modules": {
+            "bcftools/concat": {
+                "git_sha": "67cc3bd116a4dc56af79a8b84511f18b96fcad5c"
+            },
             "fastqc": {
                 "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
             },
