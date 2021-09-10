@@ -137,8 +137,10 @@ def extract_csv(csv_file) {
         if (row.vcf && row.bam_t) {
             def vcf         = file(row.vcf, checkIfExists: true)
             def bam_t       = file(row.bam_t, checkIfExists: true)
+            def bam_t_bai   = file(row.bam_t_bai, checkIfExists: true)
             def bam_c       = file(row.bam_c, checkIfExists: true)
-            return [meta, [vcf, bam_t, bam_c]]
+            def bam_c_bai   = file(row.bam_c_bai, checkIfExists: true)
+            return [meta, [vcf, bam_t, bam_t_bai, bam_c_bai]]
         // recalibration
         }
     }
@@ -146,7 +148,7 @@ def extract_csv(csv_file) {
 
 def make_platypus_input(input) {
     return input
-        .map { meta, files -> [ meta.patient, meta.control, files[0],[files[1],files[2]]]}
+        .map { meta, files -> [ meta.patient, meta.control, files[0],[files[1],files[2],files[3],files[4]]]}
         .groupTuple()
         .map { patient, control, vcfs, bams  -> [ patient,control,vcfs,bams.flatten()] }
         .map { patient, control, vcfs, bams  -> [ patient,control.unique().join(""),vcfs,bams.unique()] }
