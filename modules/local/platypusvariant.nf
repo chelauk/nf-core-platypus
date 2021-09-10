@@ -38,7 +38,7 @@ process PLATYPUSVARIANT {
     --bamFiles=\$bams \\
     --refFile=$fasta \\
     --regions=$chr \\
-    --output=${chr}_${patient}_platypus.vcf
+    --output=${chr}_${patient}_platypus.vcf \\
     --source=${vcf.join(',')} \\
     --filterReadPairsWithSmallInserts=0 \\
     --maxReads=100000000 \\
