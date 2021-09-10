@@ -31,8 +31,11 @@ process PLATYPUSVARIANT {
     def software = getSoftwareName(task.process)
     def prefix   = options.suffix ? "${patient}${options.suffix}" : "${patient}"
     """
+    bams=(*bam)
+    bams=\${bams[@]}
+    bams=\${bams// /,}
     platypus callVariants \\
-    --bamFiles=${bam.join(',')} \\
+    --bamFiles=\$bams \\
     --refFile=$fasta \\
     --regions=$chr \\
     --output=${chr}_${patient}_platypus.vcf
@@ -45,8 +48,11 @@ process PLATYPUSVARIANT {
 
     stub:
     """
+    bams=(*bam)
+    bams=\${bams[@]}
+    bams=\${bams// /,}
     touch ${patient}_${chr}.platypus.vcf
-    echo ${bam.join(',')} > vcf_files
+    echo \$bams > bam_files
     echo ${vcf.join(',')} > vcf_files
     touch platypus.version.txt
     """

@@ -92,6 +92,7 @@ ch_fasta_fai = fasta_fai
 platypus_input = make_platypus_input(input_samples)
 platypus_input = platypus_input.combine(ch_fasta_fai)
 
+platypus_input.view()
 //
 // input channel functions
 //
@@ -140,7 +141,7 @@ def extract_csv(csv_file) {
             def bam_t_bai   = file(row.bam_t_bai, checkIfExists: true)
             def bam_c       = file(row.bam_c, checkIfExists: true)
             def bam_c_bai   = file(row.bam_c_bai, checkIfExists: true)
-            return [meta, [vcf, bam_t, bam_t_bai, bam_c_bai]]
+            return [meta, [vcf, bam_t, bam_t_bai,bam_c, bam_c_bai]]
         // recalibration
         }
     }
