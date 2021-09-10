@@ -7,13 +7,13 @@ options        = initOptions(params.options)
 process PLATYPUSVARIANT {
 
     tag "$patient"
-    label 'process_high'
+    label 'eight_cpus'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:['id']) }
     conda (params.enable_conda ? "bioconda::platypus-variant=0.8.1" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/YOUR-TOOL-HERE"
+        container "https://depot.galaxyproject.org/singularity/platypus-variant%3A0.8.1.2--py27hb763d49_0"
     } else {
         container "quay.io/biocontainers/YOUR-TOOL-HERE"
     }
@@ -21,6 +21,7 @@ process PLATYPUSVARIANT {
     input:
     tuple val(patient), val(control), file(vcf), file(bam), val(chr)
     path fasta
+	path fasta_fai
 
     output:
     tuple val(patient), val(control), path("*.platypus.vcf"), emit: platypus_vcf
