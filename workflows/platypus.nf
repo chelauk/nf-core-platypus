@@ -90,7 +90,9 @@ ch_fasta_fai = fasta_fai
                 .map{ chr -> chr[0] }
                 .filter( ~/^chr\d+|^chr[X,Y]|^\d+|[X,Y]/ )
 platypus_input = make_platypus_input(input_samples)
+
 platypus_input = platypus_input.combine(ch_fasta_fai)
+platypus_input.view()
 
 //
 // input channel functions
@@ -170,12 +172,13 @@ workflow PLATYPUS {
     //
     // MODULE: Run platypus
     //
+
     PLATYPUSVARIANT(platypus_input, fasta, fasta_fai)
-    BCFTOOLS_CONCAT(PLATYPUSVARIANT.out.platypus_vcf.groupTuple())
-    filter_vcf_in = BCFTOOLS_CONCAT.out.vcf
-    filter_vcf_in = filter_vcf_in
-                        .map{patient, control, vcf -> [patient,control.unique().join(""),vcf]}
-    FILTER_PLATYPUS(filter_vcf_in)
+//    BCFTOOLS_CONCAT(PLATYPUSVARIANT.out.platypus_vcf.groupTuple())
+//    filter_vcf_in = BCFTOOLS_CONCAT.out.vcf
+//    filter_vcf_in = filter_vcf_in
+//                        .map{patient, control, vcf -> [patient,control.unique().join(""),vcf]}
+//    FILTER_PLATYPUS(filter_vcf_in)
 
 
     //
