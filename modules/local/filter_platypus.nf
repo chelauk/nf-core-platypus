@@ -21,14 +21,14 @@ process FILTER_PLATYPUS {
     tuple val(patient), val(id_sample_norm), file(vcf)
 
     output:
-    path '*.filtered.vcf.gz'
+    path '*filtered.vcf.gz'
 
     script:
     prefix       = options.suffix ? "${patient}${options.suffix}" : "platypus_${patient}"
     """
     filter_platypus.py $vcf ${id_sample_norm}
-    bgzip  ${prefix}.filtered.vcf
-    tabix -p vcf ${prefix}.filtered.vcf.gz
+    bgzip  ${prefix}_concat_filtered.vcf
+    tabix -p vcf ${prefix}_concat_filtered.vcf.gz
     """
 
     stub:
