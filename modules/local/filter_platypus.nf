@@ -12,9 +12,9 @@ process FILTER_PLATYPUS {
 
     conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
-        container "https://depot.galaxyproject.org/singularity/python:3.8.3"
+        container "https://depot.galaxyproject.org/singularity/platypus-variant%3A0.8.1.2--py27hb763d49_0"
     } else {
-        container "quay.io/biocontainers/python:3.8.3"
+        container "quay.io/biocontainers/platypus-variant%3A0.8.1.2--py27hb763d49_0"
     }
 
     input:
