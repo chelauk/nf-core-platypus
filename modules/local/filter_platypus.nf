@@ -21,7 +21,7 @@ process FILTER_PLATYPUS {
     tuple val(patient), val(id_sample_norm), file(vcf)
 
     output:
-    path '*filtered.vcf.gz', path '*filtered.vcf.gz.tbi'
+    tuple path("*filtered.vcf.gz"), path("*filtered.vcf.gz.tbi"), emit: filter_platypus_out
 
     script:
     """
