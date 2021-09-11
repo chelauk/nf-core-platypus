@@ -34,12 +34,15 @@ process PLATYPUSVARIANT {
     bams=(*bam)
     bams=\${bams[@]}
     bams=\${bams// /,}
+    vcfs=(*vcf.gz)
+    vcfs=\${vcfs[@]}
+    vcfs=\${vcfs// /,}
     platypus callVariants \\
     --bamFiles=\$bams \\
     --refFile=$fasta \\
     --regions=$chr \\
     --output=${chr}_${patient}_platypus.vcf \\
-    --source=${vcf.join(',')} \\
+    --source=\$vcfs \\
     --filterReadPairsWithSmallInserts=0 \\
     --maxReads=100000000 \\
     --minPosterior=0 \\
@@ -51,9 +54,12 @@ process PLATYPUSVARIANT {
     bams=(*bam)
     bams=\${bams[@]}
     bams=\${bams// /,}
+    vcfs=(*vcf.gz)
+    vcfs=\${vcfs[@]}
+    vcfs=\${vcfs// /,}
     touch ${patient}_${chr}.platypus.vcf
     echo \$bams > bam_files
-    echo ${vcf.join(',')} > vcf_files
+    echo \$vcfs > vcf_files
     touch platypus.version.txt
     """
 }

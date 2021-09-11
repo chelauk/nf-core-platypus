@@ -90,7 +90,7 @@ ch_fasta_fai = Channel.from("chr1","chr2","chr3","chr4","chr5","chr6","chr7","ch
                             "chr20","chr21","chr22")
 platypus_input = make_platypus_input(input_samples)
 platypus_input = platypus_input.combine(ch_fasta_fai)
-//platypus_input.view()
+platypus_input.view()
 
 //
 // input channel functions
@@ -136,11 +136,12 @@ def extract_csv(csv_file) {
         // mapping with platypus
         if (row.vcf && row.bam_t) {
             def vcf         = file(row.vcf, checkIfExists: true)
+            def vcf_tbi         = file(row.vcf_tbi, checkIfExists: true)
             def bam_t       = file(row.bam_t, checkIfExists: true)
             def bam_t_bai   = file(row.bam_t_bai, checkIfExists: true)
             def bam_c       = file(row.bam_c, checkIfExists: true)
             def bam_c_bai   = file(row.bam_c_bai, checkIfExists: true)
-            return [meta, [vcf, bam_t, bam_t_bai, bam_c, bam_c_bai]]
+            return [meta, [vcf, vcf_tbi, bam_t, bam_t_bai, bam_c, bam_c_bai]]
         // recalibration
         }
     }
@@ -148,9 +149,10 @@ def extract_csv(csv_file) {
 
 def make_platypus_input(input) {
     return input
-        .map { meta, files -> [ meta.patient, meta.control, files[0],[files[1],files[2],files[3],files[4]]]}
+        .map { meta, files -> [ meta.patient, meta.control,
+        [files[0],files[1]],[files[2],files[3],files[4],files[5]]]}
         .groupTuple()
-        .map { patient, control, vcfs, bams  -> [ patient,control,vcfs,bams.flatten()] }
+        .map { patient, control, vcfs, bams  -> [ patient,control,vcfs.flatten(),bams.flatten()] }
         .map { patient, control, vcfs, bams  -> [ patient,control.unique().join(""),vcfs,bams.unique()] }
 }
 
