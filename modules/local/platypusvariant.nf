@@ -21,6 +21,7 @@ process PLATYPUSVARIANT {
     input:
     tuple val(patient), val(control), file(vcf), file(bam), val(chr)
     path fasta
+    path fasta_fai
 
     output:
     tuple val(patient), val(control), path("*.platypus.vcf"), emit: platypus_vcf
