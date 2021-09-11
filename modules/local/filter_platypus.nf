@@ -4,6 +4,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process FILTER_PLATYPUS {
+    label 'process_low'
     tag "$patient"
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
