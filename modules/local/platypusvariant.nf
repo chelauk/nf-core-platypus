@@ -49,6 +49,7 @@ process PLATYPUSVARIANT {
     --nCPU=${task.cpus}
     bgzip ${chr}_${patient}_platypus.vcf
     tabix -p vcf ${chr}_${patient}_platypus.vcf.gz
+    echo "platypus.0.2.8.2" > platypus.version.txt
     """
 
     stub:
