@@ -22,7 +22,7 @@ process BCFTOOLS_CONCAT {
     tuple val(patient), val(control), path(vcfs), path(tbi)
 
     output:
-    tuple val(patient), val(control), path("*concat.vcf.gz"), emit: vcf
+    tuple val(patient), val(control), path("*concat.vcf"), emit: vcf
     path  "*.version.txt"        , emit: version
 
     script:
