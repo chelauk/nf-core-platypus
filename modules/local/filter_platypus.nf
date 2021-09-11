@@ -21,18 +21,17 @@ process FILTER_PLATYPUS {
     tuple val(patient), val(id_sample_norm), file(vcf)
 
     output:
-    path '*filtered.vcf.gz'
+    path '*filtered.vcf.gz', path '*filtered.vcf.gz.tbi'
 
     script:
-    prefix       = options.suffix ? "${patient}${options.suffix}" : "platypus_${patient}"
     """
     filter_platypus.py $vcf ${id_sample_norm}
-    bgzip  ${prefix}_concat_filtered.vcf
-    tabix -p vcf ${prefix}_concat_filtered.vcf.gz
+    mv ${patient}_concat_filtered.vcf Platypus_${patient}.filtered.vcf
+    bgzip  Platypus_${patient}.filtered.vcf
+    tabix -p vcf Platypus_${patient}.filtered.vcf.gz
     """
 
     stub:
-    prefix       = options.suffix ? "${patient}${options.suffix}" : "platypus_${patient}"
     """
     echo $id_sample_norm > norm.txt
     touch ${prefix}.filtered.vcf.gz
