@@ -24,7 +24,7 @@ process PLATYPUSVARIANT {
 	path fasta_fai
 
     output:
-    tuple val(patient), val(control), path("*.platypus.vcf.gz"), emit: platypus_vcf
+    tuple val(patient), val(control), path("*_platypus.vcf.gz"), emit: platypus_vcf
     path "*.version.txt"                                    , emit: version
 
     script:
