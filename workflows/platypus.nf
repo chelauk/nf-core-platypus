@@ -87,7 +87,7 @@ csv_file = file(params.input)
 input_samples  = extract_csv(csv_file)
 ch_fasta_fai = Channel.from("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10",
                             "chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19",
-                            "chr20","chr21","chr22")
+                            "chr20","chr21","chr22","chrX")
 platypus_input = make_platypus_input(input_samples)
 platypus_input = platypus_input.combine(ch_fasta_fai)
 platypus_input.view()

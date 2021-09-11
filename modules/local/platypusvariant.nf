@@ -24,7 +24,7 @@ process PLATYPUSVARIANT {
 	path fasta_fai
 
     output:
-    tuple val(patient), val(control), path("*.platypus.vcf"), emit: platypus_vcf
+    tuple val(patient), val(control), path("*.platypus.vcf.gz"), emit: platypus_vcf
     path "*.version.txt"                                    , emit: version
 
     script:
@@ -47,6 +47,8 @@ process PLATYPUSVARIANT {
     --maxReads=100000000 \\
     --minPosterior=0 \\
     --nCPU=${task.cpus}
+    bgzip ${chr}_${patient}_platypus.vcf
+    tabix -p vcf ${chr}_${patient}_platypus.vcf.gz
     """
 
     stub:
