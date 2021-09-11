@@ -26,9 +26,8 @@ process FILTER_PLATYPUS {
     script:
     prefix       = options.suffix ? "${patient}${options.suffix}" : "platypus_${patient}"
     """
-    bgzip -d ${vcf}
-    filter_platypus.py ${prefix}.vcf ${id_sample_norm}
-    bgzip  ${prefix}_filtered.vcf
+    filter_platypus.py $vcf ${id_sample_norm}
+    bgzip  ${prefix}.filtered.vcf
     tabix -p vcf ${prefix}.filtered.vcf.gz
     """
 

@@ -30,8 +30,7 @@ process BCFTOOLS_CONCAT {
     prefix       = options.suffix ? "${patient}${options.suffix}" : "${patient}_concat"
     """
     bcftools concat \\
-        --output ${prefix}.vcf.gz \\
-        --output-type z \\
+        --output ${prefix}.vcf \\
         $options.args \\
         --threads $task.cpus \\
         ${vcfs}
