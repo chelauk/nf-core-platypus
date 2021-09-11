@@ -31,6 +31,7 @@ process BCFTOOLS_CONCAT {
     """
     bcftools concat \\
         --output ${prefix}.vcf.gz \\
+        --output-type z \\
         $options.args \\
         --threads $task.cpus \\
         ${vcfs}
