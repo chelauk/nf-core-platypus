@@ -85,13 +85,12 @@ fasta_fai         = params.fasta_fai         ? Channel.fromPath(params.fasta_fai
 // Initialise input sample
 csv_file = file(params.input)
 input_samples  = extract_csv(csv_file)
-fasta_fai.view()
 ch_fasta_fai = Channel.from("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10",
                             "chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19",
-                            "chr20","chr22")
+                            "chr20","chr21","chr22")
 platypus_input = make_platypus_input(input_samples)
 platypus_input = platypus_input.combine(ch_fasta_fai)
-platypus_input.view()
+//platypus_input.view()
 
 //
 // input channel functions
@@ -173,11 +172,11 @@ workflow PLATYPUS {
     //
 
     PLATYPUSVARIANT(platypus_input, fasta, fasta_fai)
-//    BCFTOOLS_CONCAT(PLATYPUSVARIANT.out.platypus_vcf.groupTuple())
-//    filter_vcf_in = BCFTOOLS_CONCAT.out.vcf
-//    filter_vcf_in = filter_vcf_in
-//                        .map{patient, control, vcf -> [patient,control.unique().join(""),vcf]}
-//    FILTER_PLATYPUS(filter_vcf_in)
+    BCFTOOLS_CONCAT(PLATYPUSVARIANT.out.platypus_vcf.groupTuple())
+    filter_vcf_in = BCFTOOLS_CONCAT.out.vcf
+    filter_vcf_in = filter_vcf_in
+                        .map{patient, control, vcf -> [patient,control.unique().join(""),vcf]}
+    FILTER_PLATYPUS(filter_vcf_in)
 
 
     //
