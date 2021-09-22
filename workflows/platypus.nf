@@ -67,15 +67,23 @@ include { PLATYPUSVARIANT } from '../modules/local/platypusvariant' addParams( o
 // MODULE: bcftools module
 //
 
-def bcftools_options          =modules['bcftools']
+def bcftools_options          = modules['bcftools']
 include { BCFTOOLS_CONCAT } from '../modules/nf-core/modules/bcftools/concat/main' addParams( options: bcftools_options)
 
 //
-// MODULE: bcftools module
+// MODULE: filter platypus module
 //
 
-def filter_platypus_options          =modules['filter_platypus']
-include { FILTER_PLATYPUS } from '../modules/local/filter_platypus' addParams( options: filter_platypus_options)
+def filter_platypus_options    = modules['filter_platypus']
+include { FILTERPLATYPUS } from '../modules/local/filterplatypus.nf' addParams( options: filter_platypus_options)
+
+//
+// MODULE: bgzip module
+//
+
+def bgzip_options              = modules['bgzip_vcfs']
+include { BGZIP } from '../modules/local/bgzip' addParams( options: bgzip_options)
+
 
 // Initialize file channels based on params, defined in the params.genomes[params.genome] scope
 
@@ -177,9 +185,9 @@ workflow PLATYPUS {
     BCFTOOLS_CONCAT(PLATYPUSVARIANT.out.platypus_vcf.groupTuple())
     filter_vcf_in = BCFTOOLS_CONCAT.out.vcf
     filter_vcf_in = filter_vcf_in
-                        .map{patient, control, vcf -> [patient,control.unique().join(""),vcf]}
-    FILTER_PLATYPUS(filter_vcf_in)
-
+                        .map{patient, control, vcf, tbi -> [patient,control.unique().join(""),vcf,tbi]}
+    FILTERPLATYPUS(filter_vcf_in)
+    BGZIP(FILTERPLATYPUS.out.filtered_vcf)
 
     //
     // MODULE: Pipeline reporting

@@ -47,7 +47,7 @@ process PLATYPUSVARIANT {
     --maxReads=100000000 \\
     --minPosterior=0 \\
     --nCPU=${task.cpus}
-    bgzip ${chr}_${patient}_platypus.vcf
+    bgzip
     tabix -p vcf ${chr}_${patient}_platypus.vcf.gz
     echo "platypus.0.2.8.2" > platypus.version.txt
     """
@@ -60,7 +60,8 @@ process PLATYPUSVARIANT {
     vcfs=(*vcf.gz)
     vcfs=\${vcfs[@]}
     vcfs=\${vcfs// /,}
-    touch ${patient}_${chr}.platypus.vcf
+    touch ${chr}_${patient}_platypus.vcf.gz
+    touch ${chr}_${patient}_platypus.vcf.gz.tbi
     echo \$bams > bam_files
     echo \$vcfs > vcf_files
     touch platypus.version.txt
