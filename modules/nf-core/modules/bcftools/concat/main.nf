@@ -35,7 +35,7 @@ process BCFTOOLS_CONCAT {
         --threads $task.cpus \\
         ${vcfs}
     bgzip ${prefix}.vcf
-    tabix -p vcf ${prefix}.vcf
+    tabix -p vcf ${prefix}.vcf.gz
     echo \$(bcftools --version 2>&1) | sed 's/^.*bcftools //; s/ .*\$//' > ${software}.version.txt
     """
 
