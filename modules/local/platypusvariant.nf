@@ -46,7 +46,9 @@ process PLATYPUSVARIANT {
     --filterReadPairsWithSmallInserts=0 \\
     --maxReads=100000000 \\
     --minPosterior=0 \\
-    --nCPU=${task.cpus}
+    --nCPU=${task.cpus} \\
+    --getVariantsFromBAMs=0
+
     bgzip ${chr}_${patient}_platypus.vcf
     tabix -p vcf ${chr}_${patient}_platypus.vcf.gz
     echo "platypus.0.2.8.2" > platypus.version.txt
